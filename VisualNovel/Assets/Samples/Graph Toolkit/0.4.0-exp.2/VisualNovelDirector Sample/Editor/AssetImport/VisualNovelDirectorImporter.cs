@@ -116,9 +116,14 @@ namespace Unity.GraphToolkit.Samples.VisualNovelDirector.Editor
                 case SetMusicNode setMusicNodeModel:
                     returnedNodes.Add(new SetMusicRuntimeNode
                     {
-
+                        IsLoop = GetInputPortValue<bool>(setMusicNodeModel.GetInputPortByName(SetMusicNode.IN_PORT_MUSIC_NAME)),
+                        MusicClip = GetInputPortValue<AudioClip>(setMusicNodeModel.GetInputPortByName(SetMusicNode.IN_PORT_MUSIC_NAME))
                     });
-                    break ;
+
+					// Note: We deliberately don't add a WaitForInputRuntimeNode here to enable updating multiple
+					// visual novel elements (the background, music, dialogue, etc) all at once. This creates a seamless
+					// transition involving more than one element.
+					break;
 
                 case SetDialogueNode setDialogueNodeModel:
                     returnedNodes.Add(new SetDialogueRuntimeNode

@@ -34,6 +34,10 @@ namespace Unity.GraphToolkit.Samples.VisualNovelDirector
         public TextMeshProUGUI DialogueText;
         public TextMeshProUGUI ActorNameText;
 
+        [Header("Audio Players")]
+        public AudioSource MusicPlayer;
+        public AudioSource SaundEffectPlayer;
+
         [Header("Settings")]
         public float GlobalFadeDuration = 0.5f;
         public float GlobalTextDelayPerCharacter = 0.03f;
@@ -48,6 +52,7 @@ namespace Unity.GraphToolkit.Samples.VisualNovelDirector
             var setBackgroundExecutor = new SetBackgroundExecutor();
             var setDialogueExecutor = new SetDialogueExecutor();
             var waitForInputExecutor = new WaitForInputExecutor();
+            var setMusicExecuter = new SetMusicExecuter();
 
             // Execute each node in the runtime graph sequentially
             foreach (var node in RuntimeGraph.Nodes)
@@ -59,6 +64,9 @@ namespace Unity.GraphToolkit.Samples.VisualNovelDirector
                         break;
                     case SetDialogueRuntimeNode dialogueNode:
                         await setDialogueExecutor.ExecuteAsync(dialogueNode, this);
+                        break;
+                    case SetMusicRuntimeNode musicNode:
+                        await setMusicExecuter.ExecuteAsync(musicNode, this);
                         break;
                     case SetDialogueRuntimeNodeWithPreviousActor dialogueNode:
                         await setDialogueExecutor.ExecuteAsync(dialogueNode, this);
