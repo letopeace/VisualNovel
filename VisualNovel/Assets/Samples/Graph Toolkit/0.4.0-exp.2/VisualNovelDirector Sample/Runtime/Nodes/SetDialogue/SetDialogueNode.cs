@@ -10,8 +10,11 @@ namespace Unity.GraphToolkit.Samples.VisualNovelDirector
     public class SetDialogueRuntimeNode : VisualNovelRuntimeNode
     {
         public string ActorName;
-        public Sprite ActorSprite;
-        public int LocationIndex;
-        public string DialogueText;
+        public Sprite FullBackSprite;
+		public Sprite FullSprite;
+		public Sprite LeftSprite;
+		public Sprite RightSprite;
+		public Sprite FullFrontSprite;
+		public string DialogueText;
     }
 }

@@ -13,14 +13,22 @@ namespace Unity.GraphToolkit.Samples.VisualNovelDirector.Editor
     internal class SetDialogueNode : VisualNovelNode
     {
         public const string IN_PORT_ACTOR_NAME_NAME = "ActorName";
-        public const string IN_PORT_ACTOR_SPRITE_NAME = "ActorSprite";
-        public const string IN_PORT_LOCATION_NAME = "ActorLocation";
-        public const string IN_PORT_DIALOGUE_NAME = "Dialogue";
+
+        public const string IN_PORT_FULLBACK_SPRITE_NAME = "FullBackSprite";
+		public const string IN_PORT_FULL_SPRITE_NAME = "FullSprite";
+		public const string IN_PORT_LEFT_SPRITE_NAME = "LeftSprite";
+		public const string IN_PORT_RIGHT_SPRITE_NAME = "RightSprite";
+		public const string IN_PORT_FULLFRONT_SPRITE_NAME = "FullFrontSprite";
+
+		public const string IN_PORT_DIALOGUE_NAME = "Dialogue";
 
         public enum Location
         {
-            Left = 0,
-            Right = 1
+            FullBack = 0,
+            Full = 1,
+            Left = 2,
+            Right = 3,
+            FullFront = 4
         }
 
         /// <summary>
@@ -34,13 +42,24 @@ namespace Unity.GraphToolkit.Samples.VisualNovelDirector.Editor
             context.AddInputPort<string>(IN_PORT_ACTOR_NAME_NAME)
                 .WithDisplayName("Actor Name")
                 .Build();
-            context.AddInputPort<Sprite>(IN_PORT_ACTOR_SPRITE_NAME)
-                .WithDisplayName("Actor Sprite")
+
+            context.AddInputPort<Sprite>(IN_PORT_FULLBACK_SPRITE_NAME)
+                .WithDisplayName("Full Back")
                 .Build();
-            context.AddInputPort<Location>(IN_PORT_LOCATION_NAME)
-                .WithDisplayName("Actor Location")
-                .Build();
-            context.AddInputPort<string>(IN_PORT_DIALOGUE_NAME)
+			context.AddInputPort<Sprite>(IN_PORT_FULL_SPRITE_NAME)
+				.WithDisplayName("Full")
+				.Build();
+			context.AddInputPort<Sprite>(IN_PORT_LEFT_SPRITE_NAME)
+				.WithDisplayName("Left")
+				.Build();
+			context.AddInputPort<Sprite>(IN_PORT_RIGHT_SPRITE_NAME)
+				.WithDisplayName("Right")
+				.Build();
+			context.AddInputPort<Sprite>(IN_PORT_FULLFRONT_SPRITE_NAME)
+				.WithDisplayName("Full Front")
+				.Build();
+
+			context.AddInputPort<string>(IN_PORT_DIALOGUE_NAME)
                 .Build();
 
         }

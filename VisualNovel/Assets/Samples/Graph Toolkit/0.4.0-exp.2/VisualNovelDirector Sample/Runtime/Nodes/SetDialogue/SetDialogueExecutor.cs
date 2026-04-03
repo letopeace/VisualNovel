@@ -1,7 +1,9 @@
+using Codice.Client.Common.GameUI;
 using System.Text;
 using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Unity.GraphToolkit.Samples.VisualNovelDirector
 {
@@ -20,24 +22,35 @@ namespace Unity.GraphToolkit.Samples.VisualNovelDirector
             if (string.IsNullOrEmpty(runtimeNode.DialogueText))
             {
                 ctx.DialoguePanel.SetActive(false);
-                return;
+				FillImage(ctx.ActorLocationList[0], runtimeNode.FullBackSprite);
+				FillImage(ctx.ActorLocationList[1], runtimeNode.FullSprite);
+				FillImage(ctx.ActorLocationList[2], runtimeNode.LeftSprite);
+				FillImage(ctx.ActorLocationList[3], runtimeNode.RightSprite);
+				FillImage(ctx.ActorLocationList[4], runtimeNode.FullFrontSprite);
+				return;
             }
 
             ctx.DialoguePanel.SetActive(true);
             ctx.ActorNameText.text = runtimeNode.ActorName;
 
-            foreach (var location in ctx.ActorLocationList)
-                location.enabled = false;
-
-            if (runtimeNode.ActorSprite != null)
-            {
-                var img = ctx.ActorLocationList[runtimeNode.LocationIndex];
-                img.enabled = true;
-                img.sprite = runtimeNode.ActorSprite;
-            }
+            FillImage(ctx.ActorLocationList[0], runtimeNode.FullBackSprite);
+			FillImage(ctx.ActorLocationList[1], runtimeNode.FullSprite);
+			FillImage(ctx.ActorLocationList[2], runtimeNode.LeftSprite);
+			FillImage(ctx.ActorLocationList[3], runtimeNode.RightSprite);
+			FillImage(ctx.ActorLocationList[4], runtimeNode.FullFrontSprite);
 
             await TypeTextWithSkipAsync(runtimeNode.DialogueText, ctx);
         }
+
+        void FillImage(Image image, Sprite sprite)
+        {
+			if (sprite != null)
+			{
+				image.enabled = true;
+				image.sprite = sprite;
+			}
+			else image.enabled = false;
+		}
 
         /// <summary>
         /// Executes the <see cref="SetDialogueRuntimeNodeWithPreviousActor"/> node, and keeps all previous actor settings
