@@ -269,6 +269,10 @@ namespace Unity.GraphToolkit.Samples.VisualNovelDirector.Editor
 					// transition involving more than one element.
 					break;
 
+                case PlayAnimationNode playAnimationNodeModel:
+                    returnedNodes.Add(new PlayAnimationRuntimeNode());
+                    break;
+
 				case SetDialogueNodeWithoutWait setDialogueNodeModel:
 					returnedNodes.Add(new SetDialogueRuntimeNode
 					{

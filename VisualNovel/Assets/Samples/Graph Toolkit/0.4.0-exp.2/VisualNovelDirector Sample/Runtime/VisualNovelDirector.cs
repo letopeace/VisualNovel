@@ -35,6 +35,7 @@ namespace Unity.GraphToolkit.Samples.VisualNovelDirector
         public GameObject OptionPanel;
         public TextMeshProUGUI Option1Text;
         public TextMeshProUGUI Option2Text;
+        public Animation tryaskaAnim;
 
 		[Header("Audio Players")]
 		public AudioSource MusicPlayer;
@@ -53,6 +54,7 @@ namespace Unity.GraphToolkit.Samples.VisualNovelDirector
             // Create each executor once
             var setBackgroundExecutor = new SetBackgroundExecutor();
 			var setMusicExecuter = new SetMusicExecuter();
+            var playAnimationExecutor = new PlayAnimationNodeExecutor();
 			var setDialogueExecutor = new SetDialogueExecutor();
 			var waitWithoutInputExecutor = new WaitWithoutInputExecutor();
 			var waitForInputExecutor = new WaitForInputExecutor();
@@ -77,6 +79,11 @@ namespace Unity.GraphToolkit.Samples.VisualNovelDirector
 						await setMusicExecuter.ExecuteAsync(musicNode, this);
                         nextNodeIndex = musicNode.NextNodeIndex;
 						break;
+
+                    case PlayAnimationRuntimeNode playAnimationNode:
+                        await playAnimationExecutor.ExecuteAsync(playAnimationNode, this); 
+                        nextNodeIndex = playAnimationNode.NextNodeIndex;
+                        break;
 
 					case SetDialogueRuntimeNode dialogueNode:
                         await setDialogueExecutor.ExecuteAsync(dialogueNode, this);
