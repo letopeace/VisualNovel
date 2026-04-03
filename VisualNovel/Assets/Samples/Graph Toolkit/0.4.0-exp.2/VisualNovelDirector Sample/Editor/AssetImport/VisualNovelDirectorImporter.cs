@@ -49,20 +49,164 @@ namespace Unity.GraphToolkit.Samples.VisualNovelDirector.Editor
 
             // Build the runtime asset by walking the graph and adding the relevant nodes.
             var runtimeAsset = ScriptableObject.CreateInstance<VisualNovelRuntimeGraph>();
-            var nextNodeModel = GetNextNode(startNodeModel);
-            while (nextNodeModel != null)
-            {
-                var runtimeNodes = TranslateNodeModelToRuntimeNodes(nextNodeModel);
-                runtimeAsset.Nodes.AddRange(runtimeNodes);
-
-                nextNodeModel = GetNextNode(nextNodeModel);
-            }
+            BuildRuntimeGraph(startNodeModel, runtimeAsset);
 
             // Add the runtime object to the graph asset and set it to be the main asset.
             // This allows the same asset to be used in inspectors wherever a runtime asset is expected.
             // Refer to the BasicVisualNovelCanvas.prefab for an example of this.
             ctx.AddObjectToAsset("RuntimeAsset", runtimeAsset);
             ctx.SetMainObject(runtimeAsset);
+        }
+
+        /// <summary>
+        /// Builds the runtime graph by traversing all reachable nodes from the start node.
+        /// Supports both linear and branching paths.
+        /// </summary>
+        /// <param name="startNode">The start node of the graph</param>
+        /// <param name="runtimeAsset">The runtime asset to populate</param>
+        static void BuildRuntimeGraph(INode startNode, VisualNovelRuntimeGraph runtimeAsset)
+        {
+            // Map from editor nodes to their starting index in the runtime nodes list
+            var nodeToRuntimeIndex = new Dictionary<INode, int>();
+            
+            // Queue for breadth-first traversal
+            var nodesToProcess = new Queue<INode>();
+            
+            // Start with the first node after the start node
+            var firstNode = GetNextNode(startNode);
+            if (firstNode != null)
+            {
+                nodesToProcess.Enqueue(firstNode);
+            }
+
+            // Process all reachable nodes
+            while (nodesToProcess.Count > 0)
+            {
+                var currentNode = nodesToProcess.Dequeue();
+                
+                // Skip if we've already processed this node
+                if (nodeToRuntimeIndex.ContainsKey(currentNode))
+                    continue;
+
+                // Record the starting index for this node's runtime nodes
+                var startIndex = runtimeAsset.Nodes.Count;
+                nodeToRuntimeIndex[currentNode] = startIndex;
+
+                // Convert the editor node to runtime node(s)
+                var runtimeNodes = TranslateNodeModelToRuntimeNodes(currentNode);
+                runtimeAsset.Nodes.AddRange(runtimeNodes);
+
+                // Enqueue connected nodes based on node type
+                if (currentNode is TwoOptionNode dialogueOptionNode)
+                {
+                    // For branching nodes, enqueue both branches
+                    var option1Node = GetNextNodeFromPort(dialogueOptionNode, TwoOptionNode.OUT_PORT_OPTION1_NAME);
+                    var option2Node = GetNextNodeFromPort(dialogueOptionNode, TwoOptionNode.OUT_PORT_OPTION2_NAME);
+                    
+                    if (option1Node != null)
+                        nodesToProcess.Enqueue(option1Node);
+                    if (option2Node != null)
+                        nodesToProcess.Enqueue(option2Node);
+                }
+                else
+                {
+                    // For linear nodes, enqueue the next node
+                    var nextNode = GetNextNode(currentNode);
+                    if (nextNode != null)
+                        nodesToProcess.Enqueue(nextNode);
+                }
+            }
+
+            // Second pass: set up NextNodeIndex references
+            SetupNodeReferences(runtimeAsset, nodeToRuntimeIndex, startNode);
+        }
+
+        /// <summary>
+        /// Sets up the NextNodeIndex references for all runtime nodes.
+        /// </summary>
+        static void SetupNodeReferences(VisualNovelRuntimeGraph runtimeAsset, Dictionary<INode, int> nodeToRuntimeIndex, INode startNode)
+        {
+            var processedNodes = new HashSet<INode>();
+            var nodesToProcess = new Queue<INode>();
+            
+            var firstNode = GetNextNode(startNode);
+            if (firstNode != null)
+            {
+                nodesToProcess.Enqueue(firstNode);
+            }
+
+            while (nodesToProcess.Count > 0)
+            {
+                var currentNode = nodesToProcess.Dequeue();
+                
+                if (!processedNodes.Add(currentNode))
+                    continue;
+
+                if (!nodeToRuntimeIndex.TryGetValue(currentNode, out var currentRuntimeIndex))
+                    continue;
+
+                // Handle different node types
+                if (currentNode is TwoOptionNode optionNode)
+                {
+                    // For branching nodes, set both branch indices
+                    var option1Node = GetNextNodeFromPort(optionNode, TwoOptionNode.OUT_PORT_OPTION1_NAME);
+                    var option2Node = GetNextNodeFromPort(optionNode, TwoOptionNode.OUT_PORT_OPTION2_NAME);
+
+                    var twoOptionRuntimeNode = runtimeAsset.Nodes[currentRuntimeIndex] as TwoOptionRuntimeNode;
+                    if (twoOptionRuntimeNode != null)
+                    {
+                        twoOptionRuntimeNode.Option1NextNodeIndex = option1Node != null && nodeToRuntimeIndex.TryGetValue(option1Node, out var idx1) ? idx1 : -1;
+                        twoOptionRuntimeNode.Option2NextNodeIndex = option2Node != null && nodeToRuntimeIndex.TryGetValue(option2Node, out var idx2) ? idx2 : -1;
+                    }
+
+                    // Enqueue both branches for processing
+                    if (option1Node != null)
+                        nodesToProcess.Enqueue(option1Node);
+                    if (option2Node != null)
+                        nodesToProcess.Enqueue(option2Node);
+                }
+                else
+                {
+                    // For linear nodes, set NextNodeIndex
+                    var nextNode = GetNextNode(currentNode);
+                    
+                    // Get all runtime nodes created from this editor node
+                    var runtimeNodes = TranslateNodeModelToRuntimeNodes(currentNode);
+                    for (int i = 0; i < runtimeNodes.Count; i++)
+                    {
+                        var runtimeNodeIndex = currentRuntimeIndex + i;
+                        var runtimeNode = runtimeAsset.Nodes[runtimeNodeIndex];
+                        
+                        // If this is the last runtime node from this editor node
+                        if (i == runtimeNodes.Count - 1)
+                        {
+                            // Point to the next editor node's first runtime node
+                            runtimeNode.NextNodeIndex = nextNode != null && nodeToRuntimeIndex.TryGetValue(nextNode, out var nextIdx) ? nextIdx : -1;
+                        }
+                        else
+                        {
+                            // Point to the next runtime node in the sequence
+                            runtimeNode.NextNodeIndex = runtimeNodeIndex + 1;
+                        }
+                    }
+
+                    if (nextNode != null)
+                        nodesToProcess.Enqueue(nextNode);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets the node connected to a specific output port.
+        /// </summary>
+        /// <param name="currentNode">The node to get the output from</param>
+        /// <param name="portName">The name of the output port</param>
+        /// <returns>The connected node, or null if not connected</returns>
+        static INode GetNextNodeFromPort(INode currentNode, string portName)
+        {
+            var outputPort = currentNode.GetOutputPortByName(portName);
+            var nextNodePort = outputPort?.firstConnectedPort;
+            return nextNodePort?.GetNode();
         }
 
         /// <summary>
@@ -113,19 +257,29 @@ namespace Unity.GraphToolkit.Samples.VisualNovelDirector.Editor
                     // transition involving more than one element.
                     break;
 
-                case SetMusicNode setMusicNodeModel:
-                    returnedNodes.Add(new SetMusicRuntimeNode
-                    {
-                        IsLoop = GetInputPortValue<bool>(setMusicNodeModel.GetInputPortByName(SetMusicNode.IN_PORT_MUSIC_NAME)),
-                        MusicClip = GetInputPortValue<AudioClip>(setMusicNodeModel.GetInputPortByName(SetMusicNode.IN_PORT_MUSIC_NAME))
-                    });
+				case SetMusicNode setMusicNodeModel:
+					returnedNodes.Add(new SetMusicRuntimeNode
+					{
+						IsLoop = GetInputPortValue<bool>(setMusicNodeModel.GetInputPortByName(SetMusicNode.IN_PORT_MUSIC_NAME)),
+						MusicClip = GetInputPortValue<AudioClip>(setMusicNodeModel.GetInputPortByName(SetMusicNode.IN_PORT_MUSIC_NAME))
+					});
 
 					// Note: We deliberately don't add a WaitForInputRuntimeNode here to enable updating multiple
 					// visual novel elements (the background, music, dialogue, etc) all at once. This creates a seamless
 					// transition involving more than one element.
 					break;
 
-                case SetDialogueNode setDialogueNodeModel:
+				case SetDialogueNodeWithoutWait setDialogueNodeModel:
+					returnedNodes.Add(new SetDialogueRuntimeNode
+					{
+						ActorName = GetInputPortValue<string>(setDialogueNodeModel.GetInputPortByName(SetDialogueNode.IN_PORT_ACTOR_NAME_NAME)),
+						ActorSprite = GetInputPortValue<Sprite>(setDialogueNodeModel.GetInputPortByName(SetDialogueNode.IN_PORT_ACTOR_SPRITE_NAME)),
+						LocationIndex = (int)GetInputPortValue<SetDialogueNode.Location>(setDialogueNodeModel.GetInputPortByName(SetDialogueNode.IN_PORT_LOCATION_NAME)),
+						DialogueText = GetInputPortValue<string>(setDialogueNodeModel.GetInputPortByName(SetDialogueNode.IN_PORT_DIALOGUE_NAME))
+					});
+					break;
+
+				case SetDialogueNode setDialogueNodeModel:
                     returnedNodes.Add(new SetDialogueRuntimeNode
                     {
                         ActorName = GetInputPortValue<string>(setDialogueNodeModel.GetInputPortByName(SetDialogueNode.IN_PORT_ACTOR_NAME_NAME)),
@@ -139,8 +293,23 @@ namespace Unity.GraphToolkit.Samples.VisualNovelDirector.Editor
                     returnedNodes.Add(new WaitForInputRuntimeNode());
                     break;
 
-                case WaitForInputNode _:
+				case WaitWithoutInputNode waitWithoutInputNodeModel:
+					returnedNodes.Add(new WaitWithoutInputRuntimeNode()
+					{
+						WaitTime = GetInputPortValue<float>(waitWithoutInputNodeModel.GetInputPortByName(WaitWithoutInputNode.IN_PORT_WAITTIME_NAME))
+					});
+					break;
+
+				case WaitForInputNode _:
                     returnedNodes.Add(new WaitForInputRuntimeNode());
+                    break;
+
+                case TwoOptionNode twoOptionNodeModel:
+                    returnedNodes.Add(new TwoOptionRuntimeNode
+                    {
+                        Option1Text = GetInputPortValue<string>(twoOptionNodeModel.GetInputPortByName(TwoOptionNode.IN_PORT_OPTION1_NAME)),
+                        Option2Text = GetInputPortValue<string>(twoOptionNodeModel.GetInputPortByName(TwoOptionNode.IN_PORT_OPTION2_NAME))
+                    });
                     break;
 
                 default:

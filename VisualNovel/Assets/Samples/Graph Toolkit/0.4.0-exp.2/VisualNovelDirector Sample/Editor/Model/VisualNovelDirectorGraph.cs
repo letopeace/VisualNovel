@@ -81,6 +81,6 @@ namespace Unity.GraphToolkit.Samples.VisualNovelDirector.Editor
             }
         }
 
-       
+
     }
 }

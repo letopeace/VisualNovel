@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
-using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace Unity.GraphToolkit.Samples.VisualNovelDirector
@@ -15,8 +14,8 @@ namespace Unity.GraphToolkit.Samples.VisualNovelDirector
     /// and the runtime graph to execute.
     /// <br/><br/>
     /// When running (in PlayMode or in a build) this class executes the runtime visual novel graph, one node at a time,
-    /// using their respective <see cref="IVisualNovelNodeExecutor{TNode}"/>. For the sake of this sample,
-    /// the visual novel is linear and does not include any branching logic.
+    /// using their respective <see cref="IVisualNovelNodeExecutor{TNode}"/>. The execution supports both linear
+    /// narrative flow and branching paths.
     /// </summary>
     public class VisualNovelDirector : MonoBehaviour
     {
@@ -33,12 +32,15 @@ namespace Unity.GraphToolkit.Samples.VisualNovelDirector
         public GameObject DialoguePanel;
         public TextMeshProUGUI DialogueText;
         public TextMeshProUGUI ActorNameText;
+        public GameObject OptionPanel;
+        public TextMeshProUGUI Option1Text;
+        public TextMeshProUGUI Option2Text;
 
-        [Header("Audio Players")]
-        public AudioSource MusicPlayer;
-        public AudioSource SaundEffectPlayer;
+		[Header("Audio Players")]
+		public AudioSource MusicPlayer;
+		public AudioSource SaundEffectPlayer;
 
-        [Header("Settings")]
+		[Header("Settings")]
         public float GlobalFadeDuration = 0.5f;
         public float GlobalTextDelayPerCharacter = 0.03f;
 
@@ -50,34 +52,67 @@ namespace Unity.GraphToolkit.Samples.VisualNovelDirector
         {
             // Create each executor once
             var setBackgroundExecutor = new SetBackgroundExecutor();
-            var setDialogueExecutor = new SetDialogueExecutor();
-            var waitForInputExecutor = new WaitForInputExecutor();
-            var setMusicExecuter = new SetMusicExecuter();
+			var setMusicExecuter = new SetMusicExecuter();
+			var setDialogueExecutor = new SetDialogueExecutor();
+			var waitWithoutInputExecutor = new WaitWithoutInputExecutor();
+			var waitForInputExecutor = new WaitForInputExecutor();
+            var twoOptionExecutor = new TwoOptionExecutor();
 
-            // Execute each node in the runtime graph sequentially
-            foreach (var node in RuntimeGraph.Nodes)
+            // Execute nodes following the graph structure, supporting branching paths
+            int currentNodeIndex = 0;
+            
+            while (currentNodeIndex >= 0 && currentNodeIndex < RuntimeGraph.Nodes.Count)
             {
+                var node = RuntimeGraph.Nodes[currentNodeIndex];
+                int nextNodeIndex = -1;
+
                 switch (node)
                 {
                     case SetBackgroundRuntimeNode bgNode:
                         await setBackgroundExecutor.ExecuteAsync(bgNode, this);
+                        nextNodeIndex = bgNode.NextNodeIndex;
                         break;
-                    case SetDialogueRuntimeNode dialogueNode:
+
+					case SetMusicRuntimeNode musicNode:
+						await setMusicExecuter.ExecuteAsync(musicNode, this);
+                        nextNodeIndex = musicNode.NextNodeIndex;
+						break;
+
+					case SetDialogueRuntimeNode dialogueNode:
                         await setDialogueExecutor.ExecuteAsync(dialogueNode, this);
+                        nextNodeIndex = dialogueNode.NextNodeIndex;
                         break;
-                    case SetMusicRuntimeNode musicNode:
-                        await setMusicExecuter.ExecuteAsync(musicNode, this);
-                        break;
+                        
                     case SetDialogueRuntimeNodeWithPreviousActor dialogueNode:
                         await setDialogueExecutor.ExecuteAsync(dialogueNode, this);
+                        nextNodeIndex = dialogueNode.NextNodeIndex;
                         break;
-                    case WaitForInputRuntimeNode waitNode:
+
+					case WaitWithoutInputRuntimeNode waitnode:
+						await waitWithoutInputExecutor.ExecuteAsync(waitnode, this);
+                        nextNodeIndex = waitnode.NextNodeIndex;
+						break;
+
+					case WaitForInputRuntimeNode waitNode:
                         await waitForInputExecutor.ExecuteAsync(waitNode, this);
+                        nextNodeIndex = waitNode.NextNodeIndex;
                         break;
+                        
+                    case TwoOptionRuntimeNode twoOptionNode:
+                        await twoOptionExecutor.ExecuteAsync(twoOptionNode, this);
+                        
+                        // Follow the branch based on the player's choice
+                        nextNodeIndex = twoOptionNode.SelectedOption == 0 
+                            ? twoOptionNode.Option1NextNodeIndex 
+                            : twoOptionNode.Option2NextNodeIndex;
+                        break;
+                        
                     default:
                         Debug.LogError($"No executor found for node type: {node.GetType()}");
-                        break;
+                        return;
                 }
+
+                currentNodeIndex = nextNodeIndex;
             }
         }
     }
