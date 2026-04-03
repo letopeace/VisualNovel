@@ -62,8 +62,10 @@ namespace Unity.GraphToolkit.Samples.VisualNovelDirector
 
             // Execute nodes following the graph structure, supporting branching paths
             int currentNodeIndex = 0;
-            
-            while (currentNodeIndex >= 0 && currentNodeIndex < RuntimeGraph.Nodes.Count)
+
+
+
+			while (currentNodeIndex >= 0 && currentNodeIndex < RuntimeGraph.Nodes.Count)
             {
                 var node = RuntimeGraph.Nodes[currentNodeIndex];
                 int nextNodeIndex = -1;

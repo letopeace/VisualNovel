@@ -1,4 +1,4 @@
-using System.Threading.Tasks;
+/*using System.Threading.Tasks;
 using UnityEngine;
 
 namespace Unity.GraphToolkit.Samples.VisualNovelDirector
@@ -12,3 +12,4 @@ namespace Unity.GraphToolkit.Samples.VisualNovelDirector
 		}
 	}
 }
+*/
