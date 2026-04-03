@@ -39,6 +39,9 @@ namespace Unity.GraphToolkit.Samples.VisualNovelDirector
 			FillImage(ctx.ActorLocationList[3], runtimeNode.RightSprite);
 			FillImage(ctx.ActorLocationList[4], runtimeNode.FullFrontSprite);
 
+            string PlayerName = PlayerPrefs.GetString("PlayerName", "Игрок");
+            runtimeNode.DialogueText = runtimeNode.DialogueText.Replace("Игрок", PlayerName);
+
             await TypeTextWithSkipAsync(runtimeNode.DialogueText, ctx);
         }
 

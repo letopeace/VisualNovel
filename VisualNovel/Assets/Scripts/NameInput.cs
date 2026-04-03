@@ -28,8 +28,7 @@ public class NameInput : MonoBehaviour
 			return;
 		}
 
-		SaveData data = new SaveData();
-		data.PlayerName = placeholder;
+		PlayerPrefs.SetString("PlayerName",placeholder);
 		m_MenuLogic.ContinueGame();
 	}
 
