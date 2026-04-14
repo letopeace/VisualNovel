@@ -1,4 +1,3 @@
-using Codice.Client.Common.GameUI;
 using System.Text;
 using System.Threading.Tasks;
 using TMPro;
@@ -7,10 +6,10 @@ using UnityEngine.UI;
 
 namespace Unity.GraphToolkit.Samples.VisualNovelDirector
 {
-    /// <summary>
-    /// Executor for the <see cref="SetDialogueRuntimeNode"/> and <see cref="SetDialogueRuntimeNodeWithPreviousActor"/> nodes.
-    /// </summary>
-    public class SetDialogueExecutor :
+	/// <summary>
+	/// Executor for the <see cref="SetDialogueRuntimeNode"/> and <see cref="SetDialogueRuntimeNodeWithPreviousActor"/> nodes.
+	/// </summary>
+	public class SetDialogueExecutor :
         IVisualNovelNodeExecutor<SetDialogueRuntimeNode>,
         IVisualNovelNodeExecutor<SetDialogueRuntimeNodeWithPreviousActor>
     {
