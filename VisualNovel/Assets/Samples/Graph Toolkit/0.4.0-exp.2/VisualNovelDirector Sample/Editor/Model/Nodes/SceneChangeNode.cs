@@ -1,19 +1,14 @@
+using System;
 using UnityEngine;
 
 namespace Unity.GraphToolkit.Samples.VisualNovelDirector.Editor
 {
-    public class SceneChangeNode : MonoBehaviour
+    internal class SceneChangeNode : VisualNovelNode
     {
-        // Start is called once before the first execution of Update after the MonoBehaviour is created
-        void Start()
-        {
-        
-        }
+		protected override void OnDefinePorts(IPortDefinitionContext context)
+		{
+			AddInputOutputExecutionPorts(context);
 
-        // Update is called once per frame
-        void Update()
-        {
-        
-        }
-    }
+		}
+	}
 }

@@ -273,6 +273,10 @@ namespace Unity.GraphToolkit.Samples.VisualNovelDirector.Editor
                     returnedNodes.Add(new PlayAnimationRuntimeNode());
                     break;
 
+                case SceneChangeNode sceneChangeNodeModel:
+                    returnedNodes.Add(new SceneChangeRuntimeNode());
+                    break;
+
 				case SetDialogueNodeWithoutWait setDialogueNodeModel:
 					returnedNodes.Add(new SetDialogueRuntimeNode
 					{
