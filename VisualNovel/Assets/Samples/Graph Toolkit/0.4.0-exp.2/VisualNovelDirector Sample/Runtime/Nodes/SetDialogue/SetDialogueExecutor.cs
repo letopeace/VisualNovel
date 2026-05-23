@@ -27,10 +27,13 @@ namespace Unity.GraphToolkit.Samples.VisualNovelDirector
 				FillImage(ctx.ActorLocationList[3], runtimeNode.RightSprite);
 				FillImage(ctx.ActorLocationList[4], runtimeNode.FullFrontSprite);
 				return;
-            }
+			}
+			string PlayerName = PlayerPrefs.GetString("PlayerName", "Игрок");
 
-            ctx.DialoguePanel.SetActive(true);
-            ctx.ActorNameText.text = runtimeNode.ActorName;
+			ctx.DialoguePanel.SetActive(true);
+
+			runtimeNode.ActorName = runtimeNode.ActorName.Replace("Игрок", PlayerName);
+			ctx.ActorNameText.text = runtimeNode.ActorName;
 
             FillImage(ctx.ActorLocationList[0], runtimeNode.FullBackSprite);
 			FillImage(ctx.ActorLocationList[1], runtimeNode.FullSprite);
@@ -38,10 +41,10 @@ namespace Unity.GraphToolkit.Samples.VisualNovelDirector
 			FillImage(ctx.ActorLocationList[3], runtimeNode.RightSprite);
 			FillImage(ctx.ActorLocationList[4], runtimeNode.FullFrontSprite);
 
-            string PlayerName = PlayerPrefs.GetString("PlayerName", "Игрок");
             runtimeNode.DialogueText = runtimeNode.DialogueText.Replace("Игрок", PlayerName);
+			runtimeNode.DialogueText = runtimeNode.DialogueText.Replace("игрок", PlayerName);
 
-            await TypeTextWithSkipAsync(runtimeNode.DialogueText, ctx);
+			await TypeTextWithSkipAsync(runtimeNode.DialogueText, ctx);
         }
 
         void FillImage(Image image, Sprite sprite)

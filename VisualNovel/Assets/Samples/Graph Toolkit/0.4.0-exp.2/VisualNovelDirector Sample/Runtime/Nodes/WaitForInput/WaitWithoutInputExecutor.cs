@@ -3,11 +3,12 @@ using UnityEngine;
 
 namespace Unity.GraphToolkit.Samples.VisualNovelDirector
 {
-	public class WaitWithoutInputExecutor : IVisualNovelNodeExecutor<WaitForInputRuntimeNode>
+	public class WaitWithoutInputExecutor : IVisualNovelNodeExecutor<WaitWithoutInputRuntimeNode>
 	{
-		public async Task ExecuteAsync(WaitForInputRuntimeNode node, VisualNovelDirector ctx)
+		public async Task ExecuteAsync(WaitWithoutInputRuntimeNode node, VisualNovelDirector ctx)
 		{
-			await Task.Delay((int)(node.waitTime * 1000));
+			Debug.Log($"Waiting for {node.WaitTime} seconds");
+			await Task.Delay((int)(node.WaitTime * 1000));
 		}
 	}
 }

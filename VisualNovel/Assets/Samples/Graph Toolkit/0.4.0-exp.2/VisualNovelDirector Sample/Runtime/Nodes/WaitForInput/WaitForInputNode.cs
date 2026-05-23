@@ -8,6 +8,6 @@ namespace Unity.GraphToolkit.Samples.VisualNovelDirector
     [Serializable]
     public class WaitForInputRuntimeNode : VisualNovelRuntimeNode
     {
-        public float waitTime;
+        //public float waitTime;
     }
 }
